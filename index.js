@@ -46,30 +46,11 @@ Web3ProviderEngine.prototype.start = function(cb = noop){
   // trigger start
   self._ready.go()
 
-  // on new block, request block body and emit as events
-  self._blockTracker.on('latest', (blockNumber) => {
-    // get block body
-    self._getBlockByNumberWithRetry(blockNumber, (err, block) => {
-      if (err) {
-        this.emit('error', err)
-        return
-      }
-      if (!block) {
-        console.log(block)
-        this.emit('error', new Error("Could not find block"))
-        return
-      }
-      const bufferBlock = toBufferBlock(block)
-      // set current + emit "block" event
-      self._setCurrentBlock(bufferBlock)
-      // emit other events
-      self.emit('rawBlock', block)
-      self.emit('latest', block)
-    })
-  })
+  // provider.on('rawBlock') and provider.on('latest') will not work:
+  // Polling for block body automatically when started is disabled
+  // Number of rpc requests should be significantly lower
+  // Maybe polling can be started on subscription instead of automatically
 
-  // forward other events
-  self._blockTracker.on('sync', self.emit.bind(self, 'sync'))
   self._blockTracker.on('error', self.emit.bind(self, 'error'))
 
   // update state
